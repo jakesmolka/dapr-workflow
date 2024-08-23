@@ -1,0 +1,17 @@
+version: 1
+common:
+  resourcesPath: ./components
+apps:
+  - appID: worker
+    appDirPath: ./workflow-worker/target
+    #command: ["java", "-jar", "OrderProcessingService-0.0.1-SNAPSHOT.jar", "io.dapr.quickstarts.workflows.WorkflowConsoleApp"]
+    command: ["java", "-jar", "workflow-worker-0.0.1-SNAPSHOT.jar"]
+#  - appID: order-processor-sdk
+#    appDirPath: ./order-processor/target/
+#    appPort: 8080
+#    command: ["java", "-jar", "OrderProcessingService-0.0.1-SNAPSHOT.jar"]
+  - appID: workflow-connector
+    appDirPath: ./workflow-connector/target/
+    appPort: 8080
+    enableApiLogging: true
+    command: ["java", "-jar", "workflow-connector-0.0.1-SNAPSHOT.jar"]
