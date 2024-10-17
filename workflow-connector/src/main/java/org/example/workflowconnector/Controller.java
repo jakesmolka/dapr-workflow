@@ -2,9 +2,14 @@ package org.example.workflowconnector;
 
 import io.dapr.workflows.client.DaprWorkflowClient;
 import io.dapr.workflows.client.WorkflowInstanceStatus;
-import org.example.flows.GetDemographicResourceWorkflow;
+import org.example.flows.createdemographicresource.CreateDemographicResourceInput;
+import org.example.flows.createdemographicresource.CreateDemographicResourceWorkflow;
+import org.example.flows.getdemographicresource.GetDemographicResourceInput;
+import org.example.flows.getdemographicresource.GetDemographicResourceWorkflow;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.util.concurrent.TimeoutException;
@@ -16,7 +21,23 @@ public class Controller {
     public String getPatient(@PathVariable String id) throws InterruptedException, TimeoutException {
 
         try (DaprWorkflowClient workflowClient = new DaprWorkflowClient()) {
-            String instanceId = workflowClient.scheduleNewWorkflow(GetDemographicResourceWorkflow.class, "Patient/" + id);
+            String instanceId = workflowClient.scheduleNewWorkflow(GetDemographicResourceWorkflow.class, new GetDemographicResourceInput("patient", id));
+            System.out.printf("Started a new chaining model workflow with instance ID: %s%n", instanceId);
+            WorkflowInstanceStatus workflowInstanceStatus =
+                    workflowClient.waitForInstanceCompletion(instanceId, null, true);
+
+            String result = workflowInstanceStatus.readOutputAs(String.class);
+            System.out.printf("workflow instance with ID: %s completed with result: %s%n", instanceId, result);
+
+            return result;
+        }
+    }
+
+    @PostMapping("/patient/{id}")
+    public String createPatient(@PathVariable String id, @RequestBody String resource) throws InterruptedException, TimeoutException {
+
+        try (DaprWorkflowClient workflowClient = new DaprWorkflowClient()) {
+            String instanceId = workflowClient.scheduleNewWorkflow(CreateDemographicResourceWorkflow.class, new CreateDemographicResourceInput("patient", resource));
             System.out.printf("Started a new chaining model workflow with instance ID: %s%n", instanceId);
             WorkflowInstanceStatus workflowInstanceStatus =
                     workflowClient.waitForInstanceCompletion(instanceId, null, true);
